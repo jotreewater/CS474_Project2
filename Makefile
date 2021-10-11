@@ -10,8 +10,8 @@ LDFLAGS =
 # Makefile settings - Can be customized.
 APPNAME = p2
 EXT = .cpp
-SRCDIR = /home/casper/Desktop/p2/src
-OBJDIR = /home/casper/Desktop/p2/obj
+SRCDIR = /home/balthazar/Desktop/p2/src
+OBJDIR = /home/balthazar/Desktop/p2/obj
 
 ############## Do not change anything from here downwards! #############
 SRC = $(wildcard $(SRCDIR)/*$(EXT))
