@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     ImageType output(output_N, output_M, output_Q);
 
     // Correlation
-
+    // hm
     // Start by calculating correlation weights
 
     int weight_array[image_N][image_M];
