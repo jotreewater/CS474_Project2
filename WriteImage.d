@@ -1,3 +1,3 @@
-/home/casper/Desktop/p2/obj/WriteImage.o: \
- /home/casper/Desktop/p2/src/WriteImage.cpp \
- /home/casper/Desktop/p2/src/image.h
+/home/balthazar/Desktop/p2/obj/WriteImage.o: \
+ /home/balthazar/Desktop/p2/src/WriteImage.cpp \
+ /home/balthazar/Desktop/p2/src/image.h
