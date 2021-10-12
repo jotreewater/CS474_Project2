@@ -8,7 +8,7 @@ CXXFLAGS = -std=c++11 -Wall
 LDFLAGS = 
 
 # Makefile settings - Can be customized.
-APPNAME = p2
+APPNAME = q1
 EXT = .cpp
 SRCDIR = /home/balthazar/Desktop/p2/src
 OBJDIR = /home/balthazar/Desktop/p2/obj
