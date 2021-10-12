@@ -6,6 +6,9 @@
 
 #include "image.h"
 
+#define MASK_N 7
+#define MASK_M 7
+
 int readImageHeader(char[], int &, int &, int &, bool &);
 int readImage(char[], ImageType &);
 int writeImage(char[], ImageType &);
@@ -15,8 +18,8 @@ int main(int argc, char *argv[])
     std::cout << "Start." << std::endl;
     if (argc < 2)
     {
-        std::cout << "Execution Format: './p2 <Image.pgm> <Mask.pgm> <OutputImage.pgm>'" << std::endl;
-        std::cout << "The output will be named what the user inputs for argv[3]" << std::endl;
+        std::cout << "Execution Format: './p2 <Image.pgm> <OutputImage.pgm>'" << std::endl;
+        std::cout << "The unsharp will be named what the user inputs for argv[3]" << std::endl;
     }
     // Reads image header
     int image_N, image_M, image_Q, image_val;
@@ -25,22 +28,40 @@ int main(int argc, char *argv[])
     ImageType image(image_N, image_M, image_Q);
     readImage(argv[1], image);
 
-    // Reads mask
-    int mask_N, mask_M, mask_Q, mask_val;
-    bool mask_type;
-    readImageHeader(argv[2], mask_N, mask_M, mask_Q, mask_type);
-    ImageType mask(mask_N, mask_M, mask_Q);
-    readImage(argv[2], mask);
+    // 7x7 Gaussian mask
+    int mask[MASK_N][MASK_M] =
+        {{1, 1, 2, 2, 2, 1, 1},
+         {1, 2, 2, 4, 2, 2, 1},
+         {2, 2, 4, 8, 4, 2, 2},
+         {2, 4, 8, 16, 8, 4, 2},
+         {2, 2, 4, 8, 4, 2, 2},
+         {1, 2, 2, 4, 2, 2, 1},
+         {1, 1, 2, 2, 2, 1, 1}};
 
-    // Output image
-    int output_N = image_N;
-    int output_M = image_M;
-    int output_Q = image_Q;
-    ImageType output(output_N, output_M, output_Q);
+    // Unsharp image
+    int unsharp_val;
+    int unsharp_N = image_N;
+    int unsharp_M = image_M;
+    int unsharp_Q = image_Q;
+    ImageType unsharp(unsharp_N, unsharp_M, unsharp_Q);
 
-    // Correlation
-    // hm
-    // Start by calculating correlation weights
+    // Sharp image
+    int sharp_val;
+    int sharp_N = image_N;
+    int sharp_M = image_M;
+    int sharp_Q = image_Q;
+    ImageType sharp(sharp_N, sharp_M, sharp_Q);
+
+    // High image
+    int high_val;
+    int high_N = image_N;
+    int high_M = image_M;
+    int high_Q = image_Q;
+    ImageType high(high_N, high_M, high_Q);
+
+    // Unsharp + High Pass
+
+    // Start by calculating unsharp weights
 
     int weight_array[image_N][image_M];
     for (int image_i = 0; image_i < image_N; image_i++)
@@ -48,9 +69,9 @@ int main(int argc, char *argv[])
         for (int image_j = 0; image_j < image_M; image_j++)
         {
             int sum = 0;
-            for (int mask_i = (-1 * mask_N / 2); mask_i < (mask_N / 2); mask_i++)
+            for (int mask_i = (-1 * MASK_N / 2); mask_i < (MASK_N / 2); mask_i++)
             {
-                for (int mask_j = ((-1) * mask_M / 2); mask_j < (mask_M / 2); mask_j++)
+                for (int mask_j = ((-1) * MASK_M / 2); mask_j < (MASK_M / 2); mask_j++)
                 {
                     if (image_i + mask_i < 0 || image_j + mask_j < 0 || image_i + mask_i >= image_N || image_j + mask_j >= image_M)
                     {
@@ -59,8 +80,7 @@ int main(int argc, char *argv[])
                     else
                     {
                         image.getPixelVal(image_i + mask_i, image_j + mask_j, image_val);
-                        mask.getPixelVal(mask_i + mask_N / 2, mask_j + mask_M / 2, mask_val);
-                        sum += image_val * mask_val;
+                        sum += image_val * mask[mask_i + MASK_N / 2][mask_j + MASK_M / 2];
                     }
                 }
             }
@@ -72,24 +92,68 @@ int main(int argc, char *argv[])
 
     int temp, max;
     int min = image_Q;
-    for(int i = 0; i < image_N; i++){
-        for(int j = 0; j < image_M; j++){
+    for (int i = 0; i < image_N; i++)
+    {
+        for (int j = 0; j < image_M; j++)
+        {
             temp = weight_array[i][j];
-            if(temp > max){max = temp;}
-            if(temp < min){min = temp;}
+            if (temp > max)
+            {
+                max = temp;
+            }
+            if (temp < min)
+            {
+                min = temp;
+            }
         }
     }
     float adjusted_sum;
     float scale = (float)image_Q / ((float)max - (float)min);
-    for(int i = 0; i < image_N; i++){
-        for(int j = 0; j < image_M; j++){
+    for (int i = 0; i < image_N; i++)
+    {
+        for (int j = 0; j < image_M; j++)
+        {
             adjusted_sum = weight_array[i][j] * scale;
-            output.setPixelVal(i, j, (int)adjusted_sum);
+            unsharp.setPixelVal(i, j, (int)adjusted_sum);
         }
     }
 
-    // Write image
-    writeImage(argv[3], output);
+    // Write unsharp image
+    writeImage(argv[2], unsharp);
+
+    // Calculate sharp image
+    for(int i = 0; i < image_N; i++){
+        for(int j = 0; j < image_M; j++){
+            image.getPixelVal(i,j,image_val);
+            unsharp.getPixelVal(i,j,unsharp_val);
+            sharp_val = image_val - unsharp_val;
+            sharp.setPixelVal(i, j, sharp_val);
+        }
+    }
+
+    // Write sharp image
+    writeImage(argv[3], sharp);
+
+    // Calculate high image
+    int k = 4;
+    for(int i = 0; i < image_N; i++){
+        for(int j = 0; j < image_M; j++){
+            image.getPixelVal(i,j,image_val);
+            sharp.getPixelVal(i,j,sharp_val);
+            high_val = image_val + k * sharp_val;
+            if(high_val > image_Q){
+                high_val = 255;
+            }
+            else if(high_val < 0){
+                high_val = 0;
+            }
+            high.setPixelVal(i, j, high_val);
+        }
+    }
+
+    // Write high image
+    writeImage(argv[4], high);
+
     std::cout << "Finish." << std::endl;
     return (1);
 }
