@@ -48,6 +48,8 @@ void gradient_magnitude(ImageType & partial_y, ImageType & partial_x, ImageType 
 
 void sharpen(ImageType & orig, ImageType & edges, ImageType & result);
 
+void normalize(ImageType & image);
+
 int main(int argc, char * argv[]) {
 
     if (argc != 2) {
@@ -93,24 +95,31 @@ int main(int argc, char * argv[]) {
     std::string filename;
 
     filename = std::string("prewitt_y_") + argv[1];
+    normalize(prewitt_y_im);
     writeImage(filename.c_str(), prewitt_y_im);
 
     filename = std::string("prewitt_x_") + argv[1];
+    normalize(prewitt_x_im);
     writeImage(filename.c_str(), prewitt_x_im);
 
     filename = std::string("sobel_y_") + argv[1];
+    normalize(sobel_y_im);
     writeImage(filename.c_str(), sobel_y_im);
 
     filename = std::string("sobel_x_") + argv[1];
+    normalize(sobel_x_im);
     writeImage(filename.c_str(), sobel_x_im);
 
     filename = std::string("laplacian_") + argv[1];
+    normalize(laplacian_im);
     writeImage(filename.c_str(), laplacian_im);
 
     filename = std::string("prewitt_mag_") + argv[1];
+    normalize(prewitt_mag);
     writeImage(filename.c_str(), prewitt_mag);
 
     filename = std::string("sobel_mag_") + argv[1];
+    normalize(sobel_mag);
     writeImage(filename.c_str(), sobel_mag);
 
     filename = std::string("prewitt_result_") + argv[1];
@@ -177,8 +186,35 @@ void sharpen(ImageType & orig, ImageType & edges, ImageType & result) {
         for (int j = 0; j < M; j++) {
             orig.getPixelVal(i, j, val1);
             edges.getPixelVal(i, j, val2);
-            result.setPixelVal(i, j, val1 + val2);
+            result.setPixelVal(i, j, std::max(0, std::min(255, val1 + val2)));
         }
     }
 }
 
+void normalize(ImageType & image) {
+    int N, M, Q;
+    image.getImageInfo(N, M, Q);
+
+    int min_val, max_val, val;
+    image.getPixelVal(0,0,min_val);
+    image.getPixelVal(0,0,max_val);
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < M; j++) {
+            image.getPixelVal(i, j, val);
+
+            if (val < min_val) min_val = val;
+
+            if (val > max_val) max_val = val;
+
+        }
+    }
+
+    double new_val;
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < M; j++) {
+            image.getPixelVal(i, j, val);
+            new_val = 255 * (double) (val - min_val) / (double)(max_val - min_val);
+            image.setPixelVal(i, j, (int) new_val);
+        }
+    }
+}
