@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     std::cout << "Start." << std::endl;
     if (argc < 2)
     {
-        std::cout << "Execution Format: './p2 <Image.pgm> <OutputImage.pgm>'" << std::endl;
+        std::cout << "Execution Format: './p2 <Image.pgm> <Unsharp.pgm> <Sharp.pgm> <High.pgm>'" << std::endl;
         std::cout << "The unsharp will be named what the user inputs for argv[3]" << std::endl;
     }
     // Reads image header
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     writeImage(argv[3], sharp);
 
     // Calculate high image
-    int k = 4;
+    int k = 2;
     for(int i = 0; i < image_N; i++){
         for(int j = 0; j < image_M; j++){
             image.getPixelVal(i,j,image_val);
